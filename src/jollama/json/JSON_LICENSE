@@ -1,0 +1,5 @@
+This package is cloned from https://github.com/stleary/JSON-java.
+
+The LICENSE there is PUBLIC DOMAIN.
+
+The package name was changed from org.json to jollama.json to give it a common root.
