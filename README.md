@@ -5,6 +5,40 @@ ollama already has full clients in Javascript and python.  This is for adding co
 # Basic Features
 The client can list models and generate responses.  The responses can be returned all at once or streamed.  To stream a response just register a callback.
 
+## Getting Started
+If ollama is running locally on the default port, the following is all that is needed to make the client ready to use.
+    
+    import jollama.OllamaClient;
+    
+    OllamaClient client = new OllamaClient();
+
+
+## List Models
+To list models, instantiate the client and call
+
+    List<String> modelNames = client.listModelNames();
+    for(int i=0; i<modelNames.size(); i++)
+    {
+        System.out.println(i + "\t" + modelNames.get(i));
+    }
+
+## To generate a response from a prompt
+
+    String model = "llama3";
+    String prompt = "Why is the sky blue?";
+    
+    String response = client.generateResponse(model,prompt);
+    
+    System.out.println(response);
+    
+To stream the response instead of blocking while the whole thing is generated you can use the stream methods.  They require that you implement one of the callback interfaces  _StreamTokenCallback_  or  _StreamJSONCallback_ .
+
+    
+# Building
+You can easily import the src folder into a project in your IDE.  From the command line you can execute the compile.sh (Mac and Linux) or compile.bat script.  It assumes that you have javac and jar available on the command line.
+
+It will produce a set of class files in the target/bin directory and a jar file in the target/jar directory.
+ 
 # Dependencies
 This package has no external dependencies to compile or run.  To receive a response, there needs to be an ollama server running on localhost on port 11434.
 
