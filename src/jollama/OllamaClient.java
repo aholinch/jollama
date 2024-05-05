@@ -90,6 +90,58 @@ public class OllamaClient
     }
  
     /**
+     * A streaming response to a generate prompt returning just the response.
+     * 
+     * @param model
+     * @param prompt
+     * @param callback
+     * @return
+     */
+    public void streamGenerateResponse(String model, String prompt, StreamTokenCallback callback)
+    {  	
+    	try
+    	{
+            AsyncGenerate aGen = new AsyncGenerate();
+            aGen.setModel(model);
+            aGen.setPrompt(prompt);
+            aGen.setTokenCallback(callback);
+            
+            Thread t = new Thread(aGen);
+            t.start();
+    	}
+    	catch(Exception ex)
+    	{
+    		logger.log(Level.WARNING,"Error getting prompt response",ex);
+    	}    	
+    }
+    
+    /**
+     * A streaming response to a generate prompt returning the whole JSON object.
+     * 
+     * @param model
+     * @param prompt
+     * @param callback
+     * @return
+     */
+    public void streamGenerateResponseJSON(String model, String prompt, StreamJSONCallback callback)
+    {
+    	try
+    	{
+            AsyncGenerate aGen = new AsyncGenerate();
+            aGen.setModel(model);
+            aGen.setPrompt(prompt);
+            aGen.setJSONCallback(callback);
+            
+            Thread t = new Thread(aGen);
+            t.start();
+    	}
+    	catch(Exception ex)
+    	{
+    		logger.log(Level.WARNING,"Error getting prompt response",ex);
+    	}
+    }
+
+    /**
      * return the embedding array
      * 
      * @param model
@@ -301,4 +353,150 @@ public class OllamaClient
     	return conn;
     }
 
+    protected class AsyncGenerate implements Runnable
+    {
+        protected StreamTokenCallback tokenCallback;
+        protected StreamJSONCallback jsonCallback;
+        protected String model;
+        protected String prompt;
+        protected String finalLine;
+        
+        public AsyncGenerate()
+        {
+        	
+        }
+        
+        public void setTokenCallback(StreamTokenCallback callback)
+        {
+        	tokenCallback = callback;
+        }
+        
+        public void setJSONCallback(StreamJSONCallback callback)
+        {
+        	jsonCallback = callback;
+        }
+        
+        public void setModel(String str)
+        {
+        	model = str;
+        }
+        
+        public void setPrompt(String str)
+        {
+        	prompt = str;
+        }
+        
+		@Override
+		public void run() 
+		{
+	    	String url = baseURL + "/api/generate";
+	    	JSONObject obj = new JSONObject();
+	    	obj.put("model", model);
+	    	obj.put("prompt", prompt);
+	    	obj.put("stream", true);
+	    	
+	    	String output = postJSON(url,obj.toString());
+	    	this.finalLine = output;
+		}
+		
+		public String getFinalLine()
+		{
+			return finalLine;
+		}
+		
+		protected boolean handleLine(String line)
+		{
+			boolean flag = false;
+			JSONObject obj = new JSONObject(line);
+			if(jsonCallback != null)
+			{
+				jsonCallback.nextJSON(line);
+			}
+			else if(tokenCallback != null)
+			{
+				tokenCallback.nextTokens(obj.getString("response"));
+			}
+			if(obj.getBoolean("done"))
+			{
+				flag = true;
+			}
+			
+			return flag;
+		}
+		
+	    protected String postJSON(String apiURL, String jsonBody)
+	    {
+	    	HttpURLConnection conn = null;
+	    	String output = null;
+	    	OutputStream os = null;
+	    	InputStream is = null;
+	        InputStreamReader isr = null;
+	        BufferedReader br = null;
+	        
+	    	try
+	    	{
+	    		logger.info("Attempting GET on " + apiURL);
+	    		conn = getConnection(apiURL);
+	    		conn.setRequestMethod("POST");
+	    	
+	    		// send json to server
+	    		conn.setDoOutput(true);
+	    		os = conn.getOutputStream();
+	    		os.write(jsonBody.getBytes());
+	    		os.flush();
+	    		os.close();
+	    		os = null;
+	    		
+	    		// read response
+	    		int code = conn.getResponseCode();
+	    		logger.info("Response: " + code);
+	    		
+	    		if(code == HttpURLConnection.HTTP_OK)
+	    		{
+	    			is = conn.getInputStream();
+	            	isr = new InputStreamReader(is,"UTF-8");
+	            	br = new BufferedReader(isr);
+	            	
+	            	String line = null;
+	            	
+	            	line = br.readLine();
+	            	while(line != null)
+	            	{
+	            		if(handleLine(line))
+	            		{
+	            			logger.info("Last response was: " + line);
+	            			output = line;
+	            			break;
+	            		}
+	            		
+	            		line = br.readLine();
+	            	}
+	    		}
+	    	}
+	    	catch(Exception ex)
+	    	{
+	    		logger.log(Level.WARNING,"Error performing POST",ex);
+	    	}
+	    	finally
+	    	{
+	    		if(os != null)try {os.close();}catch(Exception ex) {}
+	        	if(is != null)try {is.close();}catch(Exception ex) {}
+	        	if(isr != null)try {isr.close();}catch(Exception ex) {}
+	        	if(br != null)try {br.close();}catch(Exception ex) {}
+	    	}
+	    	return output;
+
+	    }
+    	
+    }
+    
+    public static interface StreamTokenCallback
+    {
+    	public void nextTokens(String tokens);
+    }
+    
+    public static interface StreamJSONCallback
+    {
+    	public void nextJSON(String json);
+    }
 }
