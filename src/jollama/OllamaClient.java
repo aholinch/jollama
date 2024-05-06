@@ -408,17 +408,20 @@ public class OllamaClient
 		{
 			boolean flag = false;
 			JSONObject obj = new JSONObject(line);
+			if(obj.getBoolean("done"))
+			{
+				flag = true;
+			}
+			
 			if(jsonCallback != null)
 			{
 				jsonCallback.nextJSON(line);
+				if(flag)jsonCallback.streamFinished();
 			}
 			else if(tokenCallback != null)
 			{
 				tokenCallback.nextTokens(obj.getString("response"));
-			}
-			if(obj.getBoolean("done"))
-			{
-				flag = true;
+				if(flag)tokenCallback.streamFinished();
 			}
 			
 			return flag;
@@ -493,10 +496,12 @@ public class OllamaClient
     public static interface StreamTokenCallback
     {
     	public void nextTokens(String tokens);
+    	public void streamFinished();
     }
     
     public static interface StreamJSONCallback
     {
     	public void nextJSON(String json);
+    	public void streamFinished();
     }
 }
