@@ -44,3 +44,5 @@ This package has no external dependencies to compile or run.  To receive a respo
 
 The code does use Sean Leary's [JSON-java](https://github.com/stleary/JSON-java) package.  Because that code has a 'Public Domain' license, a copy of the source is included in this package. 
  
+# Test UI
+There is a simple chat user interface written in Swing.  Just run the testui.sh or testui.bat script after compiling the code.  The UI has a list of available models.  Enter a prompt and click generate.  The response will stream back from the model.
