@@ -152,7 +152,7 @@ public class TestUI extends JPanel
 			{
 				String model = listModels.getSelectedValue();
 				String prompt = txtPrompt.getText().trim();
-				String img = base64Image;
+
 				
 				Runnable r = new Runnable() {
 					public void run() {
@@ -160,6 +160,12 @@ public class TestUI extends JPanel
 						btnGen.repaint();
 						TestUI.this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 						StreamCB cb = new StreamCB();
+						
+						String img = null;
+						if(chkImage.isSelected())
+						{
+							img = base64Image;
+						}
 						client.streamGenerateResponse(model, prompt, img, cb);
 						
 						while(!cb.isFinished())
