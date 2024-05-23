@@ -6,11 +6,14 @@ import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.util.List;
 import java.util.Map;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
@@ -19,6 +22,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 
+import jollama.ImageUtil;
 import jollama.OllamaClient;
 
 public class TestUI extends JPanel
@@ -27,14 +31,20 @@ public class TestUI extends JPanel
 
 	protected JButton btnGen;
 	protected JButton btnQuit;
+	protected JButton btnImage;
 	
 	protected JList<String> listModels;
 	protected JTextArea txtPrompt;
 	protected JTextArea txtResponse;
+	protected JCheckBox chkImage;
 	
 	protected Map<String,String> nameToJSON = null;
 	
 	protected OllamaClient client = null;
+	
+	protected String base64Image = null;
+	
+	protected JFileChooser jfc = null;
 	
 	public static final String sync = "mutex";
 	
@@ -60,11 +70,19 @@ public class TestUI extends JPanel
 		EventHandler eh = new EventHandler();
 		btnGen = new JButton("Generate");
 		btnQuit = new JButton("Quit");
+		btnImage = new JButton("Pick Image");
 		btnGen.addActionListener(eh);
 		btnQuit.addActionListener(eh);
+		btnImage.addActionListener(eh);
+		chkImage = new JCheckBox("Include Image");
+		chkImage.addActionListener(eh);
 		
 		tmp.add(btnGen);
 		tmp.add(btnQuit);
+		tmp.add(new JLabel("   "));
+		tmp.add(chkImage);
+		tmp.add(btnImage);
+		btnImage.setEnabled(false);
 		add(tmp,BorderLayout.NORTH);
 		
 		txtPrompt = new JTextArea(15,60);
@@ -101,6 +119,24 @@ public class TestUI extends JPanel
 		listModels.setVisibleRowCount(1);
 	}
 	
+	protected void pickImage()
+	{
+		if(jfc == null)
+		{
+			jfc = new JFileChooser("Select Image");
+			jfc.setFileSelectionMode(JFileChooser.FILES_ONLY);
+			jfc.setApproveButtonText("Select Image");
+		}
+		
+		int opt = jfc.showOpenDialog(this);
+		if(opt == JFileChooser.APPROVE_OPTION)
+		{
+			File f = jfc.getSelectedFile();
+			String str = ImageUtil.imageToBase64(f);
+			this.base64Image = str;
+		}
+	}
+	
 	protected void doQuit()
 	{
 		System.exit(0);
@@ -116,6 +152,7 @@ public class TestUI extends JPanel
 			{
 				String model = listModels.getSelectedValue();
 				String prompt = txtPrompt.getText().trim();
+				String img = base64Image;
 				
 				Runnable r = new Runnable() {
 					public void run() {
@@ -123,7 +160,7 @@ public class TestUI extends JPanel
 						btnGen.repaint();
 						TestUI.this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 						StreamCB cb = new StreamCB();
-						client.streamGenerateResponse(model, prompt, cb);
+						client.streamGenerateResponse(model, prompt, img, cb);
 						
 						while(!cb.isFinished())
 						{
@@ -162,6 +199,15 @@ public class TestUI extends JPanel
 			else if(src == btnQuit)
 			{
 				doQuit();
+			}
+			else if(src == chkImage)
+			{
+				if(chkImage.isSelected())btnImage.setEnabled(true);
+				else btnImage.setEnabled(false);
+			}
+			else if(src == btnImage)
+			{
+				pickImage();
 			}
 		}
 		

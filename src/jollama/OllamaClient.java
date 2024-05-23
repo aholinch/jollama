@@ -53,13 +53,13 @@ public class OllamaClient
      * @param prompt
      * @return
      */
-    public String generateResponse(String model, String prompt)
+    public String generateResponse(String model, String prompt, String base64Image)
     {
     	String output = null;
     	
     	try
     	{
-    		String jsonStr = generateResponseJSON(model,prompt);
+    		String jsonStr = generateResponseJSON(model,prompt,base64Image);
     		JSONObject obj = new JSONObject(jsonStr);
     		output = obj.getString("response");
     	}
@@ -78,13 +78,17 @@ public class OllamaClient
      * @param prompt
      * @return
      */
-    public String generateResponseJSON(String model, String prompt)
+    public String generateResponseJSON(String model, String prompt, String base64Image)
     {
     	String url = baseURL + "/api/generate";
     	JSONObject obj = new JSONObject();
     	obj.put("model", model);
     	obj.put("prompt", prompt);
     	obj.put("stream", false);
+    	if(base64Image != null)
+    	{
+    		obj.put("images",new String[] {base64Image});
+    	}
     	
     	return postJSON(url,obj.toString());
     }
@@ -97,13 +101,14 @@ public class OllamaClient
      * @param callback
      * @return
      */
-    public void streamGenerateResponse(String model, String prompt, StreamTokenCallback callback)
+    public void streamGenerateResponse(String model, String prompt, String base64Image, StreamTokenCallback callback)
     {  	
     	try
     	{
             AsyncGenerate aGen = new AsyncGenerate();
             aGen.setModel(model);
             aGen.setPrompt(prompt);
+            aGen.setBase64Image(base64Image);
             aGen.setTokenCallback(callback);
             
             Thread t = new Thread(aGen);
@@ -123,13 +128,14 @@ public class OllamaClient
      * @param callback
      * @return
      */
-    public void streamGenerateResponseJSON(String model, String prompt, StreamJSONCallback callback)
+    public void streamGenerateResponseJSON(String model, String prompt, String base64Image, StreamJSONCallback callback)
     {
     	try
     	{
             AsyncGenerate aGen = new AsyncGenerate();
             aGen.setModel(model);
             aGen.setPrompt(prompt);
+            aGen.setBase64Image(base64Image);
             aGen.setJSONCallback(callback);
             
             Thread t = new Thread(aGen);
@@ -360,6 +366,7 @@ public class OllamaClient
         protected String model;
         protected String prompt;
         protected String finalLine;
+        protected String base64Image;
         
         public AsyncGenerate()
         {
@@ -386,6 +393,11 @@ public class OllamaClient
         	prompt = str;
         }
         
+        public void setBase64Image(String img)
+        {
+        	base64Image = img;
+        }
+        
 		@Override
 		public void run() 
 		{
@@ -394,6 +406,11 @@ public class OllamaClient
 	    	obj.put("model", model);
 	    	obj.put("prompt", prompt);
 	    	obj.put("stream", true);
+	    	
+	    	if(base64Image != null)
+	    	{
+	    		obj.put("images", new String[] {base64Image});
+	    	}
 	    	
 	    	String output = postJSON(url,obj.toString());
 	    	this.finalLine = output;
@@ -408,6 +425,7 @@ public class OllamaClient
 		{
 			boolean flag = false;
 			JSONObject obj = new JSONObject(line);
+			
 			if(obj.getBoolean("done"))
 			{
 				flag = true;
@@ -441,7 +459,7 @@ public class OllamaClient
 	    		logger.info("Attempting GET on " + apiURL);
 	    		conn = getConnection(apiURL);
 	    		conn.setRequestMethod("POST");
-	    	
+
 	    		// send json to server
 	    		conn.setDoOutput(true);
 	    		os = conn.getOutputStream();
