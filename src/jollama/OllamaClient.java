@@ -21,9 +21,21 @@ public class OllamaClient
     protected String baseURL = "http://localhost:11434";
     protected String userAgent = "jollama";
     
+    protected String overrideSystemPrompt = null;
+    
     public OllamaClient()
     {
     	
+    }
+    
+    public void setOverrideSystemPrompt(String prompt)
+    {
+    	overrideSystemPrompt = prompt;
+    }
+    
+    public String getOverrideSystemPrompt()
+    {
+    	return overrideSystemPrompt;
     }
     
     public void setBaseURL(String url)
@@ -89,6 +101,10 @@ public class OllamaClient
     	{
     		obj.put("images",new String[] {base64Image});
     	}
+    	if(overrideSystemPrompt != null)
+    	{
+    		obj.put("system", overrideSystemPrompt);
+    	}
     	
     	return postJSON(url,obj.toString());
     }
@@ -110,7 +126,8 @@ public class OllamaClient
             aGen.setPrompt(prompt);
             aGen.setBase64Image(base64Image);
             aGen.setTokenCallback(callback);
-            
+            aGen.setOverrideSystemPrompt(overrideSystemPrompt);
+
             Thread t = new Thread(aGen);
             t.start();
     	}
@@ -137,6 +154,7 @@ public class OllamaClient
             aGen.setPrompt(prompt);
             aGen.setBase64Image(base64Image);
             aGen.setJSONCallback(callback);
+            aGen.setOverrideSystemPrompt(overrideSystemPrompt);
             
             Thread t = new Thread(aGen);
             t.start();
@@ -367,10 +385,21 @@ public class OllamaClient
         protected String prompt;
         protected String finalLine;
         protected String base64Image;
+        protected String overrideSystemPrompt;
         
         public AsyncGenerate()
         {
         	
+        }
+        
+        public void setOverrideSystemPrompt(String prompt)
+        {
+        	overrideSystemPrompt = prompt;
+        }
+        
+        public String getOverrideSystemPrompt()
+        {
+        	return overrideSystemPrompt;
         }
         
         public void setTokenCallback(StreamTokenCallback callback)
@@ -412,6 +441,11 @@ public class OllamaClient
 	    		obj.put("images", new String[] {base64Image});
 	    	}
 	    	
+	    	if(overrideSystemPrompt != null)
+	    	{
+	    		obj.put("system", overrideSystemPrompt);
+	    	}
+
 	    	String output = postJSON(url,obj.toString());
 	    	this.finalLine = output;
 		}
