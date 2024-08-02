@@ -32,6 +32,8 @@ public class TestUI extends JPanel
 	protected JButton btnGen;
 	protected JButton btnQuit;
 	protected JButton btnImage;
+	protected JButton btnClearPrompt;
+	protected JButton btnClearResponse;
 	
 	protected JList<String> listModels;
 	protected JTextArea txtPrompt;
@@ -60,9 +62,9 @@ public class TestUI extends JPanel
 		setLayout(new BorderLayout());
 		JPanel tmp = new JPanel(new FlowLayout());
 		tmp.add(new JLabel("Model:"));
-		String sa[] = {"Model Name"};
+		String sa[] = {"Model Name","Model Name","Model Name"};
 		listModels = new JList<String>(sa);
-		listModels.setVisibleRowCount(1);
+		listModels.setVisibleRowCount(3);
 		tmp.add(new JScrollPane(listModels));
 		
 		tmp.add(new JLabel("   "));
@@ -71,13 +73,21 @@ public class TestUI extends JPanel
 		btnGen = new JButton("Generate");
 		btnQuit = new JButton("Quit");
 		btnImage = new JButton("Pick Image");
+		btnClearPrompt = new JButton("Clear Prompt");
+		btnClearResponse = new JButton("Clear Response");
+		
 		btnGen.addActionListener(eh);
 		btnQuit.addActionListener(eh);
 		btnImage.addActionListener(eh);
+		btnClearPrompt.addActionListener(eh);
+		btnClearResponse.addActionListener(eh);
+		
 		chkImage = new JCheckBox("Include Image");
 		chkImage.addActionListener(eh);
 		
 		tmp.add(btnGen);
+		tmp.add(btnClearPrompt);
+		tmp.add(btnClearResponse);
 		tmp.add(btnQuit);
 		tmp.add(new JLabel("   "));
 		tmp.add(chkImage);
@@ -116,7 +126,7 @@ public class TestUI extends JPanel
 			saNames[i]=names.get(i);
 		}
 		listModels.setListData(saNames);
-		listModels.setVisibleRowCount(1);
+		listModels.setVisibleRowCount(3);
 	}
 	
 	protected void pickImage()
@@ -137,6 +147,16 @@ public class TestUI extends JPanel
 		}
 	}
 	
+	protected void clearResponse()
+	{
+		txtResponse.setText("");
+	}
+	
+	protected void clearPrompt()
+	{
+		txtPrompt.setText("");
+	}
+	
 	protected void doQuit()
 	{
 		System.exit(0);
@@ -150,6 +170,7 @@ public class TestUI extends JPanel
 			
 			try
 			{
+				clearResponse();
 				String model = listModels.getSelectedValue();
 				String prompt = txtPrompt.getText().trim();
 
@@ -215,6 +236,15 @@ public class TestUI extends JPanel
 			{
 				pickImage();
 			}
+			else if(src == btnClearPrompt)
+			{
+				clearPrompt();
+			}
+			else if(src == btnClearResponse)
+			{
+				clearResponse();
+			}
+
 		}
 		
 	}
@@ -256,7 +286,7 @@ public class TestUI extends JPanel
             @Override
             public void run() {
                 JFrame frame = new JFrame("Ollama Chat");
-                frame.setSize(800, 600);
+                frame.setSize(1000, 800);
                 frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 frame.getContentPane().add(new TestUI());
                 frame.setVisible(true);
