@@ -198,6 +198,7 @@ public class OllamaClient
     
     /**
      * A non-streaming response to a generate prompt returning the whole JSON object.
+     * Uses /api/embeddings
      * 
      * @param model
      * @param prompt
@@ -209,7 +210,83 @@ public class OllamaClient
     	JSONObject obj = new JSONObject();
     	obj.put("model", model);
     	obj.put("prompt", prompt);
+    	System.out.println(obj);
+    	return postJSON(url,obj.toString());
+    }
+
+    /**
+     * Embed single text with /api/embed call.
+     * 
+     * @param model
+     * @param text
+     * @return
+     */
+    public double[] getEmbed(String model, String text)
+    {
+    	List<String> list = new ArrayList<String>();
+    	list.add(text);
+    
+    	List<double[]> out = getEmbed(model,list);
     	
+    	return out.get(0);
+    }	
+
+    /**
+     * Embed multiple texts with a single call.
+     * 
+     * @param model
+     * @param text
+     * @return
+     */
+    public List<double[]> getEmbed(String model, List<String> text)
+    {
+    	List<double[]> out = null;
+    	
+    	try
+    	{
+    		String jsonStr = getEmbedJSON(model,text);
+    		JSONObject obj = new JSONObject(jsonStr);
+    		JSONArray bigArr = obj.getJSONArray("embeddings");
+    		int size = bigArr.length();
+    		out = new ArrayList<double[]>(size);
+    		
+    		int len = 0;
+    		JSONArray arr = null;
+        	double da[] = null;
+        	for(int j=0; j<size; j++)
+        	{
+        		arr = bigArr.getJSONArray(j);
+    		    len = arr.length();
+    		    da = new double[len];
+    		    for(int i=0; i<len; i++)
+    		    {
+    			    da[i]=arr.getDouble(i);
+    		    }
+    		    out.add(da);
+        	}
+    	}
+    	catch(Exception ex)
+    	{
+    		logger.log(Level.WARNING,"Error getting prompt response",ex);
+    	}
+    	
+    	return out;
+    }
+    
+    /**
+     * A non-streaming response to a generate prompt returning the whole JSON object.
+     * Uses /api/embed 
+     * @param model
+     * @param prompt
+     * @return
+     */
+    public String getEmbedJSON(String model, List<String> texts)
+    {
+    	String url = baseURL + "/api/embed";
+    	JSONObject obj = new JSONObject();
+    	obj.put("model", model);
+    	obj.put("input", texts);
+    	System.out.println(obj.toString());
     	return postJSON(url,obj.toString());
     }
     
