@@ -210,7 +210,6 @@ public class OllamaClient
     	JSONObject obj = new JSONObject();
     	obj.put("model", model);
     	obj.put("prompt", prompt);
-    	System.out.println(obj);
     	return postJSON(url,obj.toString());
     }
 
