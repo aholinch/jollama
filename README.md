@@ -33,6 +33,15 @@ To list models, instantiate the client and call
     
 To stream the response instead of blocking while the whole thing is generated you can use the stream methods.  They require that you implement one of the callback interfaces  _StreamTokenCallback_  or  _StreamJSONCallback_ .
 
+## To get a vector embedding
+Ollama (as of 0.3.0) seems to have two api endpoints "/api/embeddings" and "/api/embed".  This client can call either one.  Be aware that they return different calculated embeddings [Github Issue](https://github.com/chroma-core/chroma/issues/2614).
+
+    String model = "llama3";
+    String text = "Why is the sky blue?";
+    
+    // uses /api/embed
+    double vec[] = client.getEmbed(model,text);
+    
     
 # Building
 You can easily import the src folder into a project in your IDE.  From the command line you can execute the compile.sh (Mac and Linux) or compile.bat script.  It assumes that you have javac and jar available on the command line.
