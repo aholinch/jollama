@@ -285,7 +285,6 @@ public class OllamaClient
     	JSONObject obj = new JSONObject();
     	obj.put("model", model);
     	obj.put("input", texts);
-    	System.out.println(obj.toString());
     	return postJSON(url,obj.toString());
     }
     
