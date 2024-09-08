@@ -18,7 +18,14 @@ import java.util.logging.Logger;
 public class FileUtil 
 {
 	private static final Logger logger = Logger.getLogger(FileUtil.class.getName());
-	///usr/share/ollama/.ollama/models
+	
+	/**
+	 * Some possible locations for the blob directory:
+	 * 
+	 * <user home>/.ollama/models/blobs
+	 * /usr/share/ollama/.ollama/models/blobs
+	 * 
+	 */
 	
 	/**
 	 * Assumes the files are named sha256-[hash] the way ollama names model-related files.
@@ -41,6 +48,11 @@ public class FileUtil
 		
 		File fd = new File(dir);
 		File files[] = fd.listFiles();
+		if(files == null || files.length == 0)
+		{
+			logger.warning("No files in dir '"+dir+"'");
+			return m;
+		}
 		int nf = files.length;
 		File f = null;
 		String name = null;
@@ -85,7 +97,7 @@ public class FileUtil
     	}
     	catch(Exception ex)
     	{
-    		logger.log(Level.WARNING,"Error computing sha256");
+    		logger.log(Level.WARNING,"Error computing sha256",ex);
     	}
     	finally
     	{
@@ -106,7 +118,8 @@ public class FileUtil
     	{
     		MessageDigest md = MessageDigest.getInstance("SHA-256");
     		
-    		byte ba[] = new byte[4096];
+    		//byte ba[] = new byte[32*4096];
+    		byte ba[] = new byte[1024*1024];  // chunk size might be hardware dependent
     		int numRead = 0;
     		
     		numRead = is.read(ba);
@@ -122,7 +135,7 @@ public class FileUtil
     	}
     	catch(Exception ex)
     	{
-    		logger.log(Level.WARNING,"Error computing sha256");
+    		logger.log(Level.WARNING,"Error computing sha256",ex);
     	}
     	
     	return digest;
@@ -140,5 +153,78 @@ public class FileUtil
             hexChars[j * 2 + 1] = HEX_ARRAY[v & 0x0F];
         }
         return new String(hexChars, StandardCharsets.UTF_8);
+    }
+    
+    public static void main(String args[])
+    {
+    	String dir = null;
+    	File fd = null;
+    	
+    	if(args != null && args.length>0)
+    	{
+    		dir = args[0];
+    		fd = new File(dir);
+    		if(!(fd.exists() && fd.isDirectory()))
+    		{
+    			logger.severe("Directory does not exist '"+dir+"'");
+    			dir = null;
+    		}
+    	}
+
+    	if(dir == null)
+    	{
+    		dir = "/usr/share/ollama/.ollama/models/blobs/";
+    		fd = new File(dir);
+    		if(!(fd.exists() && fd.isDirectory()))
+    		{
+    			logger.warning("Directory does not exist '"+dir+"'");
+    			dir = null;
+    		}    		
+    	}
+
+    	if(dir == null)
+    	{
+    		String home = System.getProperty("user.home");
+    		if(home == null) home = "~/";
+    		home = home.replace('\\', '/');
+    		if(!home.endsWith("/"))home+="/";
+    		
+    		dir = home+".ollama/models/blobs/";
+    		fd = new File(dir);
+    		if(!(fd.exists() && fd.isDirectory()))
+    		{
+    			logger.warning("Directory does not exist '"+dir+"'");
+    			dir = null;
+    		}    		
+    	}
+    	
+    	if(dir == null)
+    	{
+    		logger.severe("No blobs dir specified");
+    		System.exit(0);
+    	}
+    	
+    	logger.info("Verifying blobs in dir '"+dir+"'");
+    	
+    	Map<String,List<String>> m = FileUtil.verifyBlobsInDir(dir);
+    	
+    	List<String> keys = new ArrayList<String>(m.keySet());
+    	List<String> names = null;
+    	
+    	for(int i=0; i<keys.size(); i++)
+    	{
+    		String key = keys.get(i);
+    		names = m.get(key);
+    		System.out.println("\n\n\n"+key);
+    		if(names != null)
+    		{
+	    		for(int j=0; j<names.size(); j++)
+	    		{
+	    			System.out.println(j + "\t" + names.get(j));
+	    		}
+    		}
+    	}
+
+    	System.exit(0);
     }
 }
