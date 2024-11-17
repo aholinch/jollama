@@ -2,6 +2,7 @@ package jollama.ui;
 
 import java.awt.BorderLayout;
 import java.awt.Cursor;
+import java.awt.Desktop;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -32,6 +33,7 @@ public class TestUI extends JPanel
 	protected JButton btnGen;
 	protected JButton btnQuit;
 	protected JButton btnImage;
+	protected JButton btnViewImage;
 	protected JButton btnClearPrompt;
 	protected JButton btnClearResponse;
 	
@@ -45,6 +47,7 @@ public class TestUI extends JPanel
 	protected OllamaClient client = null;
 	
 	protected String base64Image = null;
+	protected String imageFileName = null;
 	
 	protected JFileChooser jfc = null;
 	
@@ -73,12 +76,14 @@ public class TestUI extends JPanel
 		btnGen = new JButton("Generate");
 		btnQuit = new JButton("Quit");
 		btnImage = new JButton("Pick Image");
+		btnViewImage = new JButton("View Image");
 		btnClearPrompt = new JButton("Clear Prompt");
 		btnClearResponse = new JButton("Clear Response");
 		
 		btnGen.addActionListener(eh);
 		btnQuit.addActionListener(eh);
 		btnImage.addActionListener(eh);
+		btnViewImage.addActionListener(eh);
 		btnClearPrompt.addActionListener(eh);
 		btnClearResponse.addActionListener(eh);
 		
@@ -92,7 +97,9 @@ public class TestUI extends JPanel
 		tmp.add(new JLabel("   "));
 		tmp.add(chkImage);
 		tmp.add(btnImage);
+		tmp.add(btnViewImage);
 		btnImage.setEnabled(false);
+		btnViewImage.setEnabled(false);
 		add(tmp,BorderLayout.NORTH);
 		
 		txtPrompt = new JTextArea(15,60);
@@ -144,6 +151,7 @@ public class TestUI extends JPanel
 			File f = jfc.getSelectedFile();
 			String str = ImageUtil.imageToBase64(f);
 			this.base64Image = str;
+			this.imageFileName = f.getAbsolutePath();
 		}
 	}
 	
@@ -160,6 +168,23 @@ public class TestUI extends JPanel
 	protected void doQuit()
 	{
 		System.exit(0);
+	}
+	
+	protected void doViewImage()
+	{
+		if(imageFileName == null)
+		{
+			return;
+		}
+		
+		try
+		{
+			Desktop.getDesktop().open(new File(imageFileName));
+		}
+		catch(Exception ex)
+		{
+			ex.printStackTrace();
+		}
 	}
 	
 	protected void doGen()
@@ -229,12 +254,22 @@ public class TestUI extends JPanel
 			}
 			else if(src == chkImage)
 			{
-				if(chkImage.isSelected())btnImage.setEnabled(true);
-				else btnImage.setEnabled(false);
+				if(chkImage.isSelected()) {
+					btnImage.setEnabled(true);
+					btnViewImage.setEnabled(true);
+				}
+				else {
+					btnImage.setEnabled(false);
+					btnViewImage.setEnabled(false);
+				}
 			}
 			else if(src == btnImage)
 			{
 				pickImage();
+			}
+			else if(src == btnViewImage)
+			{
+				doViewImage();
 			}
 			else if(src == btnClearPrompt)
 			{
