@@ -55,3 +55,6 @@ The code does use Sean Leary's [JSON-java](https://github.com/stleary/JSON-java)
  
 # Test UI
 There is a simple chat user interface written in Swing.  Just run the testui.sh or testui.bat script after compiling the code.  The UI has a list of available models.  Enter a prompt and click generate.  The response will stream back from the model.
+
+# JSON Format
+As of version 0.5.x Ollama supports a JSON format object to geerate structured output.  Pass the format as a String parameter generateResponse() and Ollama will enforce it.  Newer models do better with it, but even older ones tend to comply.  See their [blog post](https://ollama.com/blog/structured-outputs).

@@ -20,6 +20,7 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 
@@ -39,8 +40,10 @@ public class TestUI extends JPanel
 	
 	protected JList<String> listModels;
 	protected JTextArea txtPrompt;
+	protected JTextArea txtFormat;
 	protected JTextArea txtResponse;
 	protected JCheckBox chkImage;
+	protected JCheckBox chkFormat;
 	
 	protected Map<String,String> nameToJSON = null;
 	
@@ -52,6 +55,8 @@ public class TestUI extends JPanel
 	protected JFileChooser jfc = null;
 	
 	public static final String sync = "mutex";
+	
+	protected JTabbedPane tabs = null;
 	
 	public TestUI()
 	{
@@ -87,6 +92,8 @@ public class TestUI extends JPanel
 		btnClearPrompt.addActionListener(eh);
 		btnClearResponse.addActionListener(eh);
 		
+		chkFormat = new JCheckBox("Include Format");
+		
 		chkImage = new JCheckBox("Include Image");
 		chkImage.addActionListener(eh);
 		
@@ -94,6 +101,8 @@ public class TestUI extends JPanel
 		tmp.add(btnClearPrompt);
 		tmp.add(btnClearResponse);
 		tmp.add(btnQuit);
+		tmp.add(new JLabel("   "));
+		tmp.add(chkFormat);
 		tmp.add(new JLabel("   "));
 		tmp.add(chkImage);
 		tmp.add(btnImage);
@@ -103,6 +112,7 @@ public class TestUI extends JPanel
 		add(tmp,BorderLayout.NORTH);
 		
 		txtPrompt = new JTextArea(15,60);
+		txtFormat = new JTextArea(15,60);
 		txtResponse = new JTextArea(100,60);
 		txtPrompt.setLineWrap(true);
 		txtResponse.setLineWrap(true);
@@ -111,7 +121,14 @@ public class TestUI extends JPanel
 		JPanel pnl = new JPanel(new BorderLayout());
 		pnl.setBorder(BorderFactory.createTitledBorder("Prompt"));
 		pnl.add(new JScrollPane(txtPrompt),BorderLayout.CENTER);
-		tmp.add(pnl);
+		JPanel pnl2 = new JPanel(new BorderLayout());
+		pnl2.setBorder(BorderFactory.createTitledBorder("Format"));
+		pnl2.add(new JScrollPane(txtFormat),BorderLayout.CENTER);
+		
+		tabs = new JTabbedPane();
+		tabs.addTab("Prompt", pnl);
+		tabs.addTab("Format", pnl2);
+		tmp.add(tabs);
 		
 		pnl = new JPanel(new BorderLayout());
 		pnl.setBorder(BorderFactory.createTitledBorder("Response"));
@@ -212,7 +229,12 @@ public class TestUI extends JPanel
 						{
 							img = base64Image;
 						}
-						client.streamGenerateResponse(model, prompt, img, cb);
+						String format = null;
+						if(chkFormat.isSelected())
+						{
+							format = txtFormat.getText().trim();
+						}
+						client.streamGenerateResponse(model, prompt, img, format, cb);
 						
 						while(!cb.isFinished())
 						{

@@ -65,7 +65,19 @@ public class OllamaClient
      * @param prompt
      * @return
      */
+    public String generateResponse(String model, String prompt)
+    {
+    	return generateResponse(model,prompt,null,null);
+    }
+    
     public String generateResponse(String model, String prompt, String base64Image)
+    {
+
+    	return generateResponse(model,prompt,base64Image,null);
+    }
+    
+
+    public String generateResponse(String model, String prompt, String base64Image, String format)
     {
     	String output = null;
     	
@@ -90,8 +102,19 @@ public class OllamaClient
      * @param prompt
      * @return
      */
+    public String generateResponseJSON(String model, String prompt)
+    {
+    	return generateResponseJSON(model,prompt,null,null);
+    }
+    
     public String generateResponseJSON(String model, String prompt, String base64Image)
     {
+    	return generateResponseJSON(model,prompt,base64Image,null);
+    }
+    
+    public String generateResponseJSON(String model, String prompt, String base64Image, String format)
+    {
+
     	String url = baseURL + "/api/generate";
     	JSONObject obj = new JSONObject();
     	obj.put("model", model);
@@ -100,6 +123,10 @@ public class OllamaClient
     	if(base64Image != null)
     	{
     		obj.put("images",new String[] {base64Image});
+    	}
+    	if(format != null)
+    	{
+    		obj.put("format", format);
     	}
     	if(overrideSystemPrompt != null)
     	{
@@ -117,8 +144,17 @@ public class OllamaClient
      * @param callback
      * @return
      */
+    public void streamGenerateResponse(String model, String prompt, StreamTokenCallback callback)
+    {  	
+    	streamGenerateResponse(model,prompt,null,null,callback);
+    }
     public void streamGenerateResponse(String model, String prompt, String base64Image, StreamTokenCallback callback)
     {  	
+    	streamGenerateResponse(model,prompt,base64Image,null,callback);
+    }
+    public void streamGenerateResponse(String model, String prompt, String base64Image, String format, StreamTokenCallback callback)
+    {  	
+
     	try
     	{
             AsyncGenerate aGen = new AsyncGenerate();
@@ -126,6 +162,7 @@ public class OllamaClient
             aGen.setPrompt(prompt);
             aGen.setBase64Image(base64Image);
             aGen.setTokenCallback(callback);
+            aGen.setFormat(format);
             aGen.setOverrideSystemPrompt(overrideSystemPrompt);
 
             Thread t = new Thread(aGen);
@@ -145,14 +182,26 @@ public class OllamaClient
      * @param callback
      * @return
      */
+    public void streamGenerateResponseJSON(String model, String prompt, StreamJSONCallback callback)
+    {
+    	streamGenerateResponseJSON(model,prompt,null,null,callback);
+    }
+    
     public void streamGenerateResponseJSON(String model, String prompt, String base64Image, StreamJSONCallback callback)
     {
+    	streamGenerateResponseJSON(model,prompt,base64Image,null,callback);
+    }
+    
+    public void streamGenerateResponseJSON(String model, String prompt, String base64Image, String format, StreamJSONCallback callback)
+    {
+
     	try
     	{
             AsyncGenerate aGen = new AsyncGenerate();
             aGen.setModel(model);
             aGen.setPrompt(prompt);
             aGen.setBase64Image(base64Image);
+            aGen.setFormat(format);
             aGen.setJSONCallback(callback);
             aGen.setOverrideSystemPrompt(overrideSystemPrompt);
             
@@ -460,11 +509,22 @@ public class OllamaClient
         protected String prompt;
         protected String finalLine;
         protected String base64Image;
+        protected String format;
         protected String overrideSystemPrompt;
         
         public AsyncGenerate()
         {
         	
+        }
+        
+        public void setFormat(String str)
+        {
+        	format = str;
+        }
+        
+        public String getFormat()
+        {
+        	return format;
         }
         
         public void setOverrideSystemPrompt(String prompt)
@@ -514,6 +574,18 @@ public class OllamaClient
 	    	if(base64Image != null)
 	    	{
 	    		obj.put("images", new String[] {base64Image});
+	    	}
+	    	
+	    	if(format != null)
+	    	{
+	    		try
+	    		{
+		    		obj.put("format", new JSONObject(format));
+	    		}
+	    		catch(Exception ex)
+	    		{
+	    			logger.log(Level.WARNING, "Error converting format to JSON",ex);
+	    		}
 	    	}
 	    	
 	    	if(overrideSystemPrompt != null)
