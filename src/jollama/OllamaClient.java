@@ -83,7 +83,7 @@ public class OllamaClient
     	
     	try
     	{
-    		String jsonStr = generateResponseJSON(model,prompt,base64Image);
+    		String jsonStr = generateResponseJSON(model,prompt,base64Image,format);
     		JSONObject obj = new JSONObject(jsonStr);
     		output = obj.getString("response");
     	}
