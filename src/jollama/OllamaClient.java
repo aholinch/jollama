@@ -22,10 +22,21 @@ public class OllamaClient
     protected String userAgent = "jollama";
     
     protected String overrideSystemPrompt = null;
+    protected boolean think = true;
     
     public OllamaClient()
     {
     	
+    }
+    
+    public boolean getThink()
+    {
+    	return think;
+    }
+    
+    public void setThink(boolean flag)
+    {
+    	think = flag;
     }
     
     public void setOverrideSystemPrompt(String prompt)
@@ -120,6 +131,8 @@ public class OllamaClient
     	obj.put("model", model);
     	obj.put("prompt", prompt);
     	obj.put("stream", false);
+    	obj.put("think", think);
+    	
     	if(base64Image != null)
     	{
     		obj.put("images",new String[] {base64Image});
@@ -334,6 +347,8 @@ public class OllamaClient
     	JSONObject obj = new JSONObject();
     	obj.put("model", model);
     	obj.put("input", texts);
+    	obj.put("think", think);
+
     	return postJSON(url,obj.toString());
     }
     
@@ -570,7 +585,8 @@ public class OllamaClient
 	    	obj.put("model", model);
 	    	obj.put("prompt", prompt);
 	    	obj.put("stream", true);
-	    	
+	    	obj.put("think", think);
+
 	    	if(base64Image != null)
 	    	{
 	    		obj.put("images", new String[] {base64Image});
